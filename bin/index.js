@@ -62,21 +62,7 @@ const questions = [
             return true;
         },
     },
-    {
-        type: 'input',
-        name: 'projectName',
-        message: 'What is the name of your project?',
-        validate: function (value) {
-            if (!value.length) {
-                return 'Please enter a valid project name.';
-            }
-            const projectPath = path.join(process.cwd(), value);
-            if (fs.existsSync(projectPath)) {
-                return `Directory '${value}' already exists. Please choose a different name.`;
-            }
-            return true;
-        },
-    },
+
     {
         type: 'list',
         name: 'architecture',

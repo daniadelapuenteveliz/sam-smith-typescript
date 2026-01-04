@@ -1,6 +1,6 @@
 {
     "name": "sam-smith",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Helper to build serverless backends in AWS (SAM + Lambda + API Gateway)",
     "main": "index.js",
     "type": "module",

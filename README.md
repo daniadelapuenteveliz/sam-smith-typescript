@@ -55,11 +55,20 @@ npx sam-smith
 You'll be prompted for:
 - **Template type**: Choose from `basic`, `basic-auth`, or `cognito-auth`
 - **Project name**: Name of your project directory
+- **Environment**: Deployment environment (e.g., `dev`, `prod`)
 - **Architecture**: `x86_64` or `arm64`
 - **API Gateway name**: Name for your API Gateway
 - **Lambda function name**: Name of your Lambda function
 - **Timeout**: Lambda timeout in seconds
-- **Environment variables**: Optional environment variables (from `.env` file)
+
+### Environment Variables
+
+sam-smith uses **AWS Systems Manager (SSM) Parameter Store** to manage environment variables securely.
+
+- **Storage**: Variables are stored in SSM Parameter Store with the path `/sam-smith/{environment}/{functionName}/{variableName}`.
+- **Template**: The generated `template.yaml` automatically references these parameters and passes them to your Lambda functions.
+- **Local Development**: A `.env` file is created in your project root with `ENVIRONMENT={environment}`. You can add local overrides here.
+- **Management**: Use `npm run sam-smith:update` to easily add, update, or remove environment variables.
 
 For Cognito Auth template, you'll also be prompted for:
 - **User Pool name**: Name for your Cognito User Pool
