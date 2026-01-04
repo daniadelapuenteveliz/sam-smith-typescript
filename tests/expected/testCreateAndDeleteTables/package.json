@@ -1,0 +1,30 @@
+{
+    "name": "lambda-function",
+    "version": "1.0.0",
+    "description": "AWS Lambda function with TypeScript",
+    "type": "module",
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "sam-smith:build": "sam build",
+        "sam-smith:update": "node bin/update.js",
+        "sam-smith:deploy": "sam deploy --capabilities CAPABILITY_NAMED_IAM --no-confirm-changeset --no-fail-on-empty-changeset && echo \"\" && echo \"API Gateway URLs:\" && aws cloudformation describe-stacks --stack-name sam-smith-testCreateAndDeleteTables-dev --query \"Stacks[0].Outputs[?contains(OutputKey, 'Url')].OutputValue\" --output text | tr '\\t' '\\n'",
+        "sam-smith:start": "sam local start-api"
+    },
+    "dependencies": {
+        "chalk": "^5.6.2",
+        "dotenv": "^17.2.3",
+        "inquirer": "^13.0.2",
+        "fs-extra": "^11.3.2"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.145",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20.10.0",
+        "esbuild": "^0.19.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.2",
+        "typescript": "^5.3.3"
+    }
+}

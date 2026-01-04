@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateTwoApigateways/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateTwoApigateways/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateTwoApigateways/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testCreateTwoApigatewaysFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testCreateTwoApigatewaysFunction
+      CodeUri: src/
+      Handler: testCreateTwoApigateways/handler.testCreateTwoApigateways
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event2:
+          Type: Api
+          Properties:
+            RestApiId: !Ref api3
+            Path: /test
+            Method: post
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testCreateTwoApigatewaysapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testCreateTwoApigateways/handler.ts
+        External:
+          - aws-sdk
+
+  testCreateTwoApigatewaysapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testCreateTwoApigatewaysapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testCreateTwoApigatewaysFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testCreateTwoApigatewaysFunction}'
+      RetentionInDays: 7
+
+  api2:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-api2
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  api3:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-api3
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+Outputs:
+  api3Url:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${api3}.execute-api.${AWS::Region}.amazonaws.com/default/"
+  api2Url:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${api2}.execute-api.${AWS::Region}.amazonaws.com/default/"
+  testCreateTwoApigatewaysapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testCreateTwoApigatewaysapi}.execute-api.${AWS::Region}.amazonaws.com/default"

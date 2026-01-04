@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCognitoAuthWorkflow/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCognitoAuthWorkflow/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCognitoAuthWorkflow/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testCognitoAuthWorkflowFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testCognitoAuthWorkflowFunction
+      CodeUri: src/
+      Handler: testCognitoAuthWorkflow/handler.testCognitoAuthWorkflow
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testCognitoAuthWorkflowapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testCognitoAuthWorkflow/handler.ts
+        External:
+          - aws-sdk
+
+  testCognitoAuthWorkflowapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt pool2UserPool.Arn
+      Name: !Sub ${AWS::StackName}-testCognitoAuthWorkflowapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testCognitoAuthWorkflowFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testCognitoAuthWorkflowFunction}'
+      RetentionInDays: 7
+
+  pool1UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${AWS::StackName}-pool1UserPool
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+
+  pool1UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${AWS::StackName}-pool1UserPoolClient
+      UserPoolId: !Ref pool1UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+
+  pool2UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${AWS::StackName}-pool2UserPool
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+
+  pool2UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${AWS::StackName}-pool2UserPoolClient
+      UserPoolId: !Ref pool2UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+
+  group2UserPoolGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: group2
+      Description: "g2"
+      Precedence: 2
+      UserPoolId: !Ref pool2UserPool
+
+Outputs:
+  testCognitoAuthWorkflowapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testCognitoAuthWorkflowapi}.execute-api.${AWS::Region}.amazonaws.com/default"
+  pool1UserPoolId:
+    Description: "Cognito User Pool ID"
+    Value: !Ref pool1UserPool
+  pool1UserPoolClientId:
+    Description: "Cognito User Pool Client ID"
+    Value: !Ref pool1UserPoolClient
+  pool2UserPoolId:
+    Description: "Cognito User Pool ID"
+    Value: !Ref pool2UserPool
+  pool2UserPoolClientId:
+    Description: "Cognito User Pool Client ID"
+    Value: !Ref pool2UserPoolClient

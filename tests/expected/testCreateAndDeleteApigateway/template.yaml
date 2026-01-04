@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateAndDeleteApigateway/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateAndDeleteApigateway/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateAndDeleteApigateway/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testCreateAndDeleteApigatewayFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testCreateAndDeleteApigatewayFunction
+      CodeUri: src/
+      Handler: testCreateAndDeleteApigateway/handler.testCreateAndDeleteApigateway
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testCreateAndDeleteApigatewayapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testCreateAndDeleteApigateway/handler.ts
+        External:
+          - aws-sdk
+
+  testCreateAndDeleteApigatewayapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testCreateAndDeleteApigatewayapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testCreateAndDeleteApigatewayFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testCreateAndDeleteApigatewayFunction}'
+      RetentionInDays: 7
+
+  testCreateAndDeleteApigatewayapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testCreateAndDeleteApigatewayapi}.execute-api.${AWS::Region}.amazonaws.com/default"

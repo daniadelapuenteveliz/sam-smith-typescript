@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddAndRemoveTablesFromLambda/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddAndRemoveTablesFromLambda/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddAndRemoveTablesFromLambda/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testAddAndRemoveTablesFromLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testAddAndRemoveTablesFromLambdaFunction
+      CodeUri: src/
+      Handler: testAddAndRemoveTablesFromLambda/handler.testAddAndRemoveTablesFromLambda
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Policies:
+        - !Ref tabla2Policy
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testAddAndRemoveTablesFromLambdaapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testAddAndRemoveTablesFromLambda/handler.ts
+        External:
+          - aws-sdk
+
+  testAddAndRemoveTablesFromLambdaapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testAddAndRemoveTablesFromLambdaapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testAddAndRemoveTablesFromLambdaFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testAddAndRemoveTablesFromLambdaFunction}'
+      RetentionInDays: 7
+
+  tabla1:
+    Type: 'AWS::DynamoDB::Table'
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${AWS::StackName}-tabla1
+      AttributeDefinitions:
+        - AttributeName: a#b
+          AttributeType: 'S'
+        - AttributeName: c#e#a
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: a#b
+          KeyType: 'HASH'
+        - AttributeName: c#e#a
+          KeyType: 'RANGE'
+      BillingMode: PAY_PER_REQUEST
+
+  tabla1Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-tabla1Policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource: !GetAtt tabla1.Arn
+
+  tabla2:
+    Type: 'AWS::DynamoDB::Table'
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${AWS::StackName}-tabla2
+      AttributeDefinitions:
+        - AttributeName: x
+          AttributeType: 'S'
+        - AttributeName: y
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: x
+          KeyType: 'HASH'
+        - AttributeName: y
+          KeyType: 'RANGE'
+      BillingMode: PAY_PER_REQUEST
+
+  tabla2Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-tabla2Policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource: !GetAtt tabla2.Arn
+
+Outputs:
+  testAddAndRemoveTablesFromLambdaapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testAddAndRemoveTablesFromLambdaapi}.execute-api.${AWS::Region}.amazonaws.com/default"

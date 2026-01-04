@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddAndRemoveAuth/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddAndRemoveAuth/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddAndRemoveAuth/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testAddAndRemoveAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testAddAndRemoveAuthFunction
+      CodeUri: src/
+      Handler: testAddAndRemoveAuth/handler.testAddAndRemoveAuth
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testAddAndRemoveAuthapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testAddAndRemoveAuth/handler.ts
+        External:
+          - aws-sdk
+
+  testAddAndRemoveAuthapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testAddAndRemoveAuthapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testAddAndRemoveAuthFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testAddAndRemoveAuthFunction}'
+      RetentionInDays: 7
+
+Outputs:
+  testAddAndRemoveAuthapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testAddAndRemoveAuthapi}.execute-api.${AWS::Region}.amazonaws.com/default"

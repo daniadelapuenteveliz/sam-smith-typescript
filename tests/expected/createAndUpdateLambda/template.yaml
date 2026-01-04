@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/createAndUpdateLambda/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/createAndUpdateLambda/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/createAndUpdateLambda/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  createAndUpdateLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-createAndUpdateLambdaFunction
+      CodeUri: src/
+      Handler: createAndUpdateLambda/handler.createAndUpdateLambda
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref createAndUpdateLambdaapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - createAndUpdateLambda/handler.ts
+        External:
+          - aws-sdk
+
+  createAndUpdateLambdaapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-createAndUpdateLambdaapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  createAndUpdateLambdaFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${createAndUpdateLambdaFunction}'
+      RetentionInDays: 7
+
+  lambda2Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-lambda2Function
+      CodeUri: src/
+      Handler: lambda2/handler.lambda2
+      Runtime: nodejs20.x
+      Timeout: 90
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          A2: !Ref EnvA2
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - lambda2/handler.ts
+        External:
+          - aws-sdk
+
+  lambda2FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${lambda2Function}'
+      RetentionInDays: 7
+
+Outputs:
+  createAndUpdateLambdaapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${createAndUpdateLambdaapi}.execute-api.${AWS::Region}.amazonaws.com/default"

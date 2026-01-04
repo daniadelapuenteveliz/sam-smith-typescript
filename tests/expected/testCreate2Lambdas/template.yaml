@@ -1,0 +1,148 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreate2Lambdas/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreate2Lambdas/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreate2Lambdas/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testCreate2LambdasFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testCreate2LambdasFunction
+      CodeUri: src/
+      Handler: testCreate2Lambdas/handler.testCreate2Lambdas
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          A2: !Ref EnvA2
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testCreate2Lambdasapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testCreate2Lambdas/handler.ts
+        External:
+          - aws-sdk
+
+  testCreate2Lambdasapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testCreate2Lambdasapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testCreate2LambdasFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testCreate2LambdasFunction}'
+      RetentionInDays: 7
+
+  lambda2Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-lambda2Function
+      CodeUri: src/
+      Handler: lambda2/handler.lambda2
+      Runtime: nodejs20.x
+      Timeout: 30
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          A1: !Ref EnvA1
+          A3: !Ref EnvA3
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - lambda2/handler.ts
+        External:
+          - aws-sdk
+
+  lambda2FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${lambda2Function}'
+      RetentionInDays: 7
+
+  lambda3Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-lambda3Function
+      CodeUri: src/
+      Handler: lambda3/handler.lambda3
+      Runtime: nodejs20.x
+      Timeout: 90
+      Architectures:
+        - arm64
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - lambda3/handler.ts
+        External:
+          - aws-sdk
+
+  lambda3FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${lambda3Function}'
+      RetentionInDays: 7
+
+Outputs:
+  testCreate2LambdasapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testCreate2Lambdasapi}.execute-api.${AWS::Region}.amazonaws.com/default"

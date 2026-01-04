@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateAndDeleteTables/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateAndDeleteTables/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testCreateAndDeleteTables/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testCreateAndDeleteTablesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testCreateAndDeleteTablesFunction
+      CodeUri: src/
+      Handler: testCreateAndDeleteTables/handler.testCreateAndDeleteTables
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testCreateAndDeleteTablesapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testCreateAndDeleteTables/handler.ts
+        External:
+          - aws-sdk
+
+  testCreateAndDeleteTablesapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testCreateAndDeleteTablesapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testCreateAndDeleteTablesFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testCreateAndDeleteTablesFunction}'
+      RetentionInDays: 7
+
+  table2:
+    Type: 'AWS::DynamoDB::Table'
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${AWS::StackName}-table2
+      AttributeDefinitions:
+        - AttributeName: a2#b2
+          AttributeType: 'S'
+        - AttributeName: c2#a2#e2
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: a2#b2
+          KeyType: 'HASH'
+        - AttributeName: c2#a2#e2
+          KeyType: 'RANGE'
+      BillingMode: PAY_PER_REQUEST
+
+  table2Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-table2Policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource: !GetAtt table2.Arn
+
+Outputs:
+  testCreateAndDeleteTablesapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testCreateAndDeleteTablesapi}.execute-api.${AWS::Region}.amazonaws.com/default"

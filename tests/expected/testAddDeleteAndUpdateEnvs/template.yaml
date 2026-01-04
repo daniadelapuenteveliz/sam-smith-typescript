@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA3:
+    Type: String
+    Default: 'updateTestVar'
+  EnvB5:
+    Type: String
+    Default: 'B5'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddDeleteAndUpdateEnvs/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddDeleteAndUpdateEnvs/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  ParamB5:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddDeleteAndUpdateEnvs/B5'
+      Type: String
+      Value: !Ref EnvB5
+
+  testAddDeleteAndUpdateEnvsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testAddDeleteAndUpdateEnvsFunction
+      CodeUri: src/
+      Handler: testAddDeleteAndUpdateEnvs/handler.testAddDeleteAndUpdateEnvs
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          A1: !Ref EnvA1
+          A3: !Ref EnvA3
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testAddDeleteAndUpdateEnvsapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testAddDeleteAndUpdateEnvs/handler.ts
+        External:
+          - aws-sdk
+
+  testAddDeleteAndUpdateEnvsapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testAddDeleteAndUpdateEnvsapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testAddDeleteAndUpdateEnvsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testAddDeleteAndUpdateEnvsFunction}'
+      RetentionInDays: 7
+
+Outputs:
+  testAddDeleteAndUpdateEnvsapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testAddDeleteAndUpdateEnvsapi}.execute-api.${AWS::Region}.amazonaws.com/default"

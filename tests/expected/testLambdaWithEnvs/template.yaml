@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testLambdaWithEnvs/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testLambdaWithEnvs/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testLambdaWithEnvs/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testLambdaWithEnvsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testLambdaWithEnvsFunction
+      CodeUri: src/
+      Handler: testLambdaWithEnvs/handler.testLambdaWithEnvs
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          A1: !Ref EnvA1
+          A2: !Ref EnvA2
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testLambdaWithEnvsapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testLambdaWithEnvs/handler.ts
+        External:
+          - aws-sdk
+
+  testLambdaWithEnvsapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testLambdaWithEnvsapi
+      StageName: default
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testLambdaWithEnvsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testLambdaWithEnvsFunction}'
+      RetentionInDays: 7
+
+Outputs:
+  testLambdaWithEnvsapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testLambdaWithEnvsapi}.execute-api.${AWS::Region}.amazonaws.com/default"

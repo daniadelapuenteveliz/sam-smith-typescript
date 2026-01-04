@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for sam-smith generated project
+
+Parameters:
+  EnvA1:
+    Type: String
+    Default: 'a1'
+  EnvA2:
+    Type: String
+    Default: 'a2'
+  EnvA3:
+    Type: String
+    Default: 'a3'
+
+Resources:
+
+  ParamA1:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddBasicAuth/A1'
+      Type: String
+      Value: !Ref EnvA1
+
+  ParamA2:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddBasicAuth/A2'
+      Type: String
+      Value: !Ref EnvA2
+
+  ParamA3:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sam-smith/dev/testAddBasicAuth/A3'
+      Type: String
+      Value: !Ref EnvA3
+
+  testAddBasicAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-testAddBasicAuthFunction
+      CodeUri: src/
+      Handler: testAddBasicAuth/handler.testAddBasicAuth
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+      Events:
+        event1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref testAddBasicAuthapi
+            Path: /hello
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - testAddBasicAuth/handler.ts
+        External:
+          - aws-sdk
+
+  testAddBasicAuthapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-testAddBasicAuthapi
+      StageName: default
+      Auth:
+        DefaultAuthorizer: BasicAuthorizer
+        Authorizers:
+          BasicAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt BasicAuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - Key
+              ReauthorizeEvery: 0
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+  testAddBasicAuthFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${testAddBasicAuthFunction}'
+      RetentionInDays: 7
+
+  BasicAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-BasicAuthorizerFunction
+      CodeUri: src/
+      Handler: authorizer/authorizer.basicAuthorizer
+      Runtime: nodejs20.x
+      Timeout: 60
+      Architectures:
+        - arm64
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: false
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - authorizer/authorizer.ts
+        External:
+          - aws-sdk
+
+  BasicAuthorizerFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${BasicAuthorizerFunction}'
+      RetentionInDays: 7
+
+Outputs:
+  testAddBasicAuthapiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${testAddBasicAuthapi}.execute-api.${AWS::Region}.amazonaws.com/default"

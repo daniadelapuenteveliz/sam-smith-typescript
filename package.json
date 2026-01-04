@@ -1,0 +1,51 @@
+{
+    "name": "sam-smith",
+    "version": "1.0.0",
+    "description": "Helper to build serverless backends in AWS (SAM + Lambda + API Gateway)",
+    "main": "index.js",
+    "type": "module",
+    "bin": {
+        "sam-smith": "./bin/index.js"
+    },
+    "files": [
+        "bin",
+        "lib",
+        "templates"
+    ],
+    "workspaces": [
+        "templates"
+    ],
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "sam",
+        "lambda",
+        "serverless",
+        "aws",
+        "api-gateway",
+        "typescript",
+        "cognito"
+    ],
+    "author": "Dania Ignacia de la Puente Véliz",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/daniadelapuenteveliz/sam-smith-typescript.git"
+    },
+    "bugs": {
+        "url": "https://github.com/daniadelapuenteveliz/sam-smith-typescript/issues"
+    },
+    "homepage": "https://github.com/daniadelapuenteveliz/sam-smith-typescript#readme",
+    "dependencies": {
+        "chalk": "^5.6.2",
+        "dotenv": "^17.2.3",
+        "dynamo-query-builder": "^1.0.1",
+        "fs-extra": "^11.3.2",
+        "inquirer": "^13.0.2",
+        "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "swagger-jsdoc": "^6.2.8"
+    }
+}
