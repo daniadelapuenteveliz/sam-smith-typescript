@@ -19,7 +19,6 @@ const __dirname = path.dirname(__filename);
  */
 export async function testCreateAndDeleteEndpoints() {
     const testName = 'testCreateAndDeleteEndpoints';
-    const envFilePath = path.join(__dirname, 'envs', '.env.testLambdaWithEnvs');
 
     const expectedPath = path.join(__dirname, 'expected', testName);
     const outputPath = path.join(__dirname, 'testOutput', testName);
@@ -28,10 +27,6 @@ export async function testCreateAndDeleteEndpoints() {
     let success = true;
 
     try {
-        // Set up environment for generation
-        const originalEnv = process.env.DOTENV_CONFIG_PATH;
-        process.env.DOTENV_CONFIG_PATH = envFilePath;
-
         // Step 1: Generate initial project without env vars
         console.log(chalk.blue(`  Generating initial project in testOutput/${testName}...`));
         await generateProjectProgrammatically({
@@ -41,7 +36,9 @@ export async function testCreateAndDeleteEndpoints() {
             timeout: 60,
             envVars: [],
             templateName: 'basic',
-            architecture: 'arm64'
+            architecture: 'arm64',
+            environment: 'dev',
+            envVarsWithValues: { A1: 'a1', A2: 'a2', A3: 'a3' }
         });
 
         results.push({ step: 'Initial project generated', passed: true });
@@ -116,13 +113,6 @@ export async function testCreateAndDeleteEndpoints() {
         } else {
             results.push({ step: 'src/ directory matches', passed: false, diff: srcResult.diff });
             success = false;
-        }
-
-        // Restore environment
-        if (originalEnv !== undefined) {
-            process.env.DOTENV_CONFIG_PATH = originalEnv;
-        } else {
-            delete process.env.DOTENV_CONFIG_PATH;
         }
 
     } catch (error) {

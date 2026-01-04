@@ -18,7 +18,6 @@ const __dirname = path.dirname(__filename);
  */
 export async function testAddDeleteAndUpdateEnvs() {
     const testName = 'testAddDeleteAndUpdateEnvs';
-    const envFilePath = path.join(__dirname, 'envs', '.env.testLambdaWithEnvs');
 
     const expectedPath = path.join(__dirname, 'expected', testName);
     const outputPath = path.join(__dirname, 'testOutput', testName);
@@ -27,10 +26,7 @@ export async function testAddDeleteAndUpdateEnvs() {
     let success = true;
 
     try {
-        // Step 1: Set up environment for initial generation
-        const originalEnv = process.env.DOTENV_CONFIG_PATH;
-        process.env.DOTENV_CONFIG_PATH = envFilePath;
-        // Step 2: Generate initial project with A1, A2, A3
+        // Step 1: Generate initial project with A1, A2, A3
         console.log(chalk.blue(`  Generating initial project in testOutput/${testName}...`));
         await generateProjectProgrammatically({
             projectName: testName,
@@ -39,7 +35,9 @@ export async function testAddDeleteAndUpdateEnvs() {
             timeout: 60,
             envVars: ['A1', 'A2', 'A3'], // Lambda uses all three vars
             templateName: 'basic',
-            architecture: 'arm64'
+            architecture: 'arm64',
+            environment: 'dev',
+            envVarsWithValues: { A1: 'a1', A2: 'a2', A3: 'a3' }
         });
 
         results.push({ step: 'Initial project generated', passed: true });

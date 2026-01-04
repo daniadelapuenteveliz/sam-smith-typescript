@@ -2196,7 +2196,7 @@ async function deleteLambda() {
 async function createLambda() {
     const cwd = process.cwd();
     const templatePath = path.join(cwd, 'template.yaml');
-    const envPath = path.join(cwd, '../.env');
+    const envPath = path.join(cwd, './.env');
     const srcPath = path.join(cwd, 'src');
 
     if (!fs.existsSync(templatePath)) {
@@ -2398,7 +2398,7 @@ describe('Unit test for ${lambdaName} handler', function () {
 async function updateLambda() {
     const cwd = process.cwd();
     const templatePath = path.join(cwd, 'template.yaml');
-    const envPath = path.join(cwd, '../.env');
+    const envPath = path.join(cwd, './.env');
 
     if (!fs.existsSync(templatePath)) {
         console.error(chalk.red('✗ Error: template.yaml file not found.'));
@@ -3129,7 +3129,7 @@ async function updateLambda() {
 
 async function checkEnvironmentVariables() {
     const cwd = process.cwd();
-    const envPath = path.join(cwd, '../.env');
+    const envPath = path.join(cwd, './.env');
     const templatePath = path.join(cwd, 'template.yaml');
 
     if (!fs.existsSync(envPath)) {
@@ -4353,12 +4353,12 @@ async function deleteTable() {
 
     // Write updated template
     await fs.writeFile(templatePath, lines.join('\n'));
-    
+
     // Delete handler files
     const utilsPath = path.join(cwd, 'src', 'utils');
     const handlerFile = path.join(utilsPath, `${tableToDelete}Handler.ts`);
     const testFile = path.join(utilsPath, `${tableToDelete}Handler.spec.ts`);
-    
+
     if (await fs.pathExists(handlerFile)) {
         await fs.remove(handlerFile);
         console.log(chalk.gray(`  Deleted ${tableToDelete}Handler.ts`));

@@ -25,7 +25,6 @@ const __dirname = path.dirname(__filename);
  */
 export async function testCognitoAuthWorkflow() {
     const testName = 'testCognitoAuthWorkflow';
-    const envFilePath = path.join(__dirname, 'envs', '.env.testLambdaWithEnvs');
 
     const expectedPath = path.join(__dirname, 'expected', testName);
     const outputPath = path.join(__dirname, 'testOutput', testName);
@@ -34,10 +33,6 @@ export async function testCognitoAuthWorkflow() {
     let success = true;
 
     try {
-        // Set up environment for generation
-        const originalEnv = process.env.DOTENV_CONFIG_PATH;
-        process.env.DOTENV_CONFIG_PATH = envFilePath;
-
         // Step 1: Generate project with cognito-auth template
         console.log(chalk.blue(`  Generating project with cognito-auth template in testOutput/${testName}...`));
         await generateProjectProgrammatically({
@@ -47,7 +42,9 @@ export async function testCognitoAuthWorkflow() {
             timeout: 60,
             envVars: [],
             templateName: 'basic',  // Start with basic
-            architecture: 'arm64'
+            architecture: 'arm64',
+            environment: 'dev',
+            envVarsWithValues: { A1: 'a1', A2: 'a2', A3: 'a3' }
         });
 
         results.push({ step: 'Initial project generated', passed: true });
@@ -242,13 +239,6 @@ export async function testCognitoAuthWorkflow() {
                 error: `pool1: ${hasPool1}, pool2: ${hasPool2}, group2: ${hasGroup2}, no group1: ${hasNoGroup1}`
             });
             success = false;
-        }
-
-        // Restore environment
-        if (originalEnv !== undefined) {
-            process.env.DOTENV_CONFIG_PATH = originalEnv;
-        } else {
-            delete process.env.DOTENV_CONFIG_PATH;
         }
 
     } catch (error) {

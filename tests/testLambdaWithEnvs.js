@@ -18,7 +18,6 @@ const __dirname = path.dirname(__filename);
  */
 export async function testLambdaWithEnvs() {
     const testName = 'testLambdaWithEnvs';
-    const envFilePath = path.join(__dirname, 'envs', `.env.${testName}`);
     const expectedPath = path.join(__dirname, 'expected', testName);
     const outputPath = path.join(__dirname, 'testOutput', testName);
 
@@ -26,10 +25,7 @@ export async function testLambdaWithEnvs() {
     let success = true;
 
     try {
-        // Step 1: Set up environment for this test
-        const originalEnv = process.env.DOTENV_CONFIG_PATH;
-        process.env.DOTENV_CONFIG_PATH = envFilePath;
-        // Step 2: Generate project with Lambda using environment variables A1 and A2
+        // Step 1: Generate project with Lambda using environment variables A1 and A2
         console.log(chalk.blue(`  Generating project in testOutput/${testName}...`));
         await generateProjectProgrammatically({
             projectName: testName,
@@ -38,15 +34,10 @@ export async function testLambdaWithEnvs() {
             timeout: 60,
             envVars: ['A1', 'A2'], // Lambda uses A1 and A2
             templateName: 'basic',
-            architecture: 'arm64'
+            architecture: 'arm64',
+            environment: 'dev',
+            envVarsWithValues: { A1: 'a1', A2: 'a2', A3: 'a3' }
         });
-
-        // Restore original env
-        if (originalEnv) {
-            process.env.DOTENV_CONFIG_PATH = originalEnv;
-        } else {
-            delete process.env.DOTENV_CONFIG_PATH;
-        }
 
         results.push({ step: 'Project generated', passed: true });
 

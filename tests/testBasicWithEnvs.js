@@ -18,7 +18,6 @@ const __dirname = path.dirname(__filename);
  */
 export async function testBasicWithEnvs() {
     const testName = 'testBasicWithEnvs';
-    const envFilePath = path.join(__dirname, 'envs', `.env.${testName}`);
     const expectedPath = path.join(__dirname, 'expected', testName);
     const outputPath = path.join(__dirname, 'testOutput', testName);
 
@@ -26,11 +25,7 @@ export async function testBasicWithEnvs() {
     let success = true;
 
     try {
-        // Step 1: Set up environment for this test
-        const originalEnv = process.env.DOTENV_CONFIG_PATH;
-        process.env.DOTENV_CONFIG_PATH = envFilePath;
-
-        // Step 2: Generate project with environment variables
+        // Step 1: Generate project with environment variables
         console.log(chalk.blue(`  Generating project in testOutput/${testName}...`));
         await generateProjectProgrammatically({
             projectName: testName,
@@ -39,15 +34,10 @@ export async function testBasicWithEnvs() {
             timeout: 60,
             envVars: [], // Don't assign env vars to Lambda, just create SSM parameters
             templateName: 'basic',
-            architecture: 'arm64'
+            architecture: 'arm64',
+            environment: 'dev',
+            envVarsWithValues: { A1: 'a1', A2: 'a2', A3: 'a3' }
         });
-
-        // Restore original env
-        if (originalEnv) {
-            process.env.DOTENV_CONFIG_PATH = originalEnv;
-        } else {
-            delete process.env.DOTENV_CONFIG_PATH;
-        }
 
         results.push({ step: 'Project generated', passed: true });
 

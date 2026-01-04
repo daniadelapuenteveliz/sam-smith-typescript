@@ -2192,7 +2192,7 @@ async function deleteLambda() {
 async function createLambda() {
     const cwd = process.cwd();
     const templatePath = path.join(cwd, 'template.yaml');
-    const envPath = path.join(cwd, '../.env');
+    const envPath = path.join(cwd, './.env');
     const srcPath = path.join(cwd, 'src');
 
     if (!fs.existsSync(templatePath)) {
@@ -2394,7 +2394,7 @@ describe('Unit test for ${lambdaName} handler', function () {
 async function updateLambda() {
     const cwd = process.cwd();
     const templatePath = path.join(cwd, 'template.yaml');
-    const envPath = path.join(cwd, '../.env');
+    const envPath = path.join(cwd, './.env');
 
     if (!fs.existsSync(templatePath)) {
         console.error(chalk.red('✗ Error: template.yaml file not found.'));
@@ -2862,7 +2862,7 @@ async function updateLambda() {
 
 async function checkEnvironmentVariables() {
     const cwd = process.cwd();
-    const envPath = path.join(cwd, '../.env');
+    const envPath = path.join(cwd, './.env');
     const templatePath = path.join(cwd, 'template.yaml');
 
     if (!fs.existsSync(envPath)) {
